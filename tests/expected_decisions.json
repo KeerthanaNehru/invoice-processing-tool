@@ -1,0 +1,54 @@
+{
+  "happy_path.pdf": {
+    "decision": "AUTO_APPROVED",
+    "reason": "Clean invoice, known vendor, explicit PO, within balance"
+  },
+  "within_tolerance.pdf": {
+    "decision": "AUTO_APPROVED",
+    "reason": "Slightly over PO but within 2% tolerance"
+  },
+  "over_tolerance.pdf": {
+    "decision": "HOLD_FOR_REVIEW",
+    "reason": "8% over PO remaining balance",
+    "expected_rule_failures": [
+      "R6_AMOUNT_WITHIN_BALANCE"
+    ]
+  },
+  "scanned_no_po.pdf": {
+    "decision": "APPROVED_WITH_NOTE",
+    "reason": "OCR scanned invoice with inferred PO match"
+  },
+  "split_bill_1.pdf": {
+    "decision": "APPROVED_WITH_NOTE",
+    "reason": "First split bill \u2014 inferred PO match (note added)"
+  },
+  "split_bill_2.pdf": {
+    "decision": "APPROVED_WITH_NOTE",
+    "reason": "Second split bill \u2014 inferred PO, within remaining balance"
+  },
+  "split_bill_3.pdf": {
+    "decision": "HOLD_FOR_REVIEW",
+    "reason": "Third split bill exceeds remaining PO balance",
+    "expected_rule_failures": [
+      "R6_AMOUNT_WITHIN_BALANCE"
+    ]
+  },
+  "near_duplicate.pdf": {
+    "decision": "REJECTED",
+    "reason": "INV1001-A normalises to same key as INV-1001 (duplicate)",
+    "expected_reason_codes": [
+      "DUPLICATE_INVOICE"
+    ]
+  },
+  "missing_fields.pdf": {
+    "decision": "REQUEST_INFO",
+    "reason": "No valid invoice number, zero total \u2014 critical fields missing"
+  },
+  "fraud_bank_change.pdf": {
+    "decision": "REJECTED",
+    "reason": "Bank account differs from vendor master \u2014 critical fraud block",
+    "expected_fraud_codes": [
+      "BANK_DETAILS_MISMATCH"
+    ]
+  }
+}

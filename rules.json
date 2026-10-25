@@ -1,0 +1,11 @@
+{
+  "amount_tolerance_pct": 0.02,
+  "amount_tolerance_fixed": 500.0,
+  "max_auto_approve_amount": 50000.0,
+  "min_extraction_confidence": 0.70,
+  "min_inferred_po_confidence": 0.65,
+  "currency_must_match": true,
+  "require_po_for_amount_above": 10000.0,
+  "duplicate_date_window_days": 3,
+  "minutes_per_invoice_manual": 30.0
+}

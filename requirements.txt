@@ -1,0 +1,39 @@
+# Invoice Processing Tool — Python dependencies
+# Compatible with Python 3.13 (local) and Python 3.12 (Docker/HuggingFace)
+
+# Web framework
+fastapi==0.162.0
+uvicorn[standard]==0.54.0
+aiofiles==25.1.0
+python-multipart==0.0.32
+
+# PDF processing
+pdfplumber==0.11.10
+PyMuPDF==2.0
+
+# OCR
+pytesseract==0.3.13
+Pillow==13.0.0
+
+# Fuzzy matching
+rapidfuzz==3.14.6
+
+# Sample PDF generation
+reportlab==5.1.0
+
+# LLM
+groq==1.7.0
+
+# Config & validation
+python-dotenv==1.2.4
+pydantic[email]==2.14.1
+
+# HTTP client (used internally by Groq SDK)
+httpx==0.28.1
+
+# Rate limiting
+slowapi==0.1.10
+
+# Testing
+pytest==9.1.1
+pytest-asyncio==1.4.0

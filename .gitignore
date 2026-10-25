@@ -1,0 +1,52 @@
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python cache & build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# SQLite databases & temp journal files
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+data/*.db
+data/*.db-journal
+data/*.db-shm
+data/*.db-wal
+
+# Uploaded test PDFs (preserve folder with .gitkeep)
+uploads/
+data/uploads/*
+!data/uploads/.gitkeep
+
+# IDE & OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Test & coverage artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log

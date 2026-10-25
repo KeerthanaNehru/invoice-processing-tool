@@ -1,0 +1,9 @@
+id,name,tax_id,approved,bank_account,email,currency
+V001,Acme Supplies Inc,US-47-1234567,1,ACC-US-9876543210,accounts@acmesupplies.com,USD
+V002,Global Tech Solutions,US-47-9876543,1,ACC-US-1234567890,billing@globaltech.com,USD
+V003,Rapid Logistics Ltd,UK-GB-12345678,1,ACC-UK-5551234567,invoices@rapidlogistics.co.uk,GBP
+V004,Sunrise Software Pvt Ltd,IN-29AABCS1234K1ZX,1,ACC-IN-HDFC9876543210,accounts@sunrisesoftware.in,INR
+V005,Pinnacle Consulting Group,US-47-5551234,1,ACC-US-7779876543,finance@pinnacle.com,USD
+V006,CloudBase Systems,US-47-3332211,1,ACC-US-1112223333,ar@cloudbase.io,USD
+V007,Mega Freight Corp,US-47-7778889,0,ACC-US-4445556666,ar@megafreight.com,USD
+V008,Vertex Analytics,IN-27AADCV5678P1ZY,1,ACC-IN-ICICI1234567890,billing@vertexanalytics.in,INR

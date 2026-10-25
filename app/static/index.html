@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Processing Tool</title>
+  <meta name="description" content="AI-driven accounts payable processing engine with 8-stage verification, 2-way/3-way PO matching, fraud prevention, and real-time SSE streaming.">
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📄</text></svg>">
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="navbar">
+    <a href="#" class="brand">
+      <div class="brand-icon">📄</div>
+      <div class="brand-text">
+        <h1>Invoice Processing Tool</h1>
+        <span>Automated AP Intelligence</span>
+      </div>
+    </a>
+
+    <nav class="nav-tabs">
+      <button class="nav-tab-btn active" id="tab-btn-studio" onclick="switchTab('studio')">
+        <span>⚡</span> Studio & Live Run
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-dashboard" onclick="switchTab('dashboard')">
+        <span>📊</span> Analytics & Runs
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-rules" onclick="switchTab('rules')">
+        <span>⚙️</span> Rule Thresholds
+      </button>
+      <button class="nav-tab-btn" id="tab-btn-master" onclick="switchTab('master')">
+        <span>🗄️</span> Master Data & Logic
+      </button>
+    </nav>
+
+    <div class="header-status">
+      <div class="status-dot"></div>
+      <span id="backend-status">Connected (Port 7860)</span>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- ===================================================================
+         TAB 1: STUDIO / LIVE RUN
+         =================================================================== -->
+    <section id="tab-studio" class="tab-pane active">
+      <div class="studio-grid">
+        
+        <!-- Left: Uploader & Sample Selector -->
+        <div class="studio-sidebar">
+          
+          <div class="glass-card">
+            <h2 class="card-title">
+              <span>Upload Invoice</span>
+              <span class="badge badge-auto-approved">PDF &lt; 5MB</span>
+            </h2>
+            
+            <div id="dropzone" class="dropzone" onclick="document.getElementById('file-input').click()">
+              <input type="file" id="file-input" accept=".pdf" style="display:none;" onchange="handleFileSelect(event)">
+              <div class="dropzone-icon">📄</div>
+              <p><strong>Drag & drop invoice PDF</strong> or click to browse</p>
+              <div class="dropzone-subtext">Automatic OCR detection for scanned documents</div>
+              <button type="button" class="btn-upload" onclick="event.stopPropagation(); document.getElementById('file-input').click()">Choose File</button>
+            </div>
+          </div>
+
+          <div class="glass-card samples-section">
+            <div class="samples-header">
+              <span>Test Edge Cases (1-Click)</span>
+              <span id="sample-count">10 Samples</span>
+            </div>
+            <div id="samples-list" class="sample-pills">
+              <!-- Rendered via JS -->
+              <div style="padding: 1rem; color: var(--text-muted); text-align: center;">Loading test samples...</div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Live 8-Stage Execution Pipeline -->
+        <div class="studio-main">
+          
+          <div class="stages-card">
+            <div class="pipeline-header">
+              <div>
+                <h2 style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 700;">
+                  Live Execution Pipeline
+                </h2>
+                <div style="font-size: 0.825rem; color: var(--text-secondary); margin-top: 2px;">
+                  8-Stage verification with real-time SSE telemetry
+                </div>
+              </div>
+              <div class="run-meta">
+                <span id="active-filename" style="font-size: 0.85rem; font-weight: 500; color: var(--text-primary);">No run active</span>
+                <span id="active-run-id" class="run-id-pill">ID: —</span>
+                <button class="btn-secondary" style="padding: 0.3rem 0.75rem; font-size: 0.75rem;" onclick="resetPipeline()">Reset</button>
+              </div>
+            </div>
+
+            <!-- 8 Stages List -->
+            <div class="stages-list" id="stages-container">
+              
+              <!-- Stage 1 -->
+              <div class="stage-item" id="stage-0">
+                <div class="stage-summary-row" onclick="toggleStageDetails(0)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">1</div>
+                    <div>
+                      <div class="stage-name">Stage 1 — Ingestion & OCR Detection</div>
+                      <div class="stage-sub" id="stage-0-sub">pdfplumber text extraction vs Tesseract OCR fallback</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-0-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-0-details" style="display:none;"></div>
+              </div>
+
+              <!-- Stage 2 -->
+              <div class="stage-item" id="stage-1">
+                <div class="stage-summary-row" onclick="toggleStageDetails(1)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">2</div>
+                    <div>
+                      <div class="stage-name">Stage 2 — LLM Structured Extraction</div>
+                      <div class="stage-sub" id="stage-1-sub">Extracts 12+ fields with per-field confidence & SHA-256 caching</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-1-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-1-details" style="display:none;"></div>
+              </div>
+
+              <!-- Stage 3 -->
+              <div class="stage-item" id="stage-2">
+                <div class="stage-summary-row" onclick="toggleStageDetails(2)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">3</div>
+                    <div>
+                      <div class="stage-name">Stage 3 — Data Validation & Math Integrity</div>
+                      <div class="stage-sub" id="stage-2-sub">Subtotal + tax = total; Line item cross-multiplication; Required fields</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-2-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-2-details" style="display:none;"></div>
+              </div>
+
+              <!-- Stage 4 -->
+              <div class="stage-item" id="stage-3">
+                <div class="stage-summary-row" onclick="toggleStageDetails(3)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">4</div>
+                    <div>
+                      <div class="stage-name">Stage 4 — Vendor Master Check & Fraud Shield</div>
+                      <div class="stage-sub" id="stage-3-sub">Fuzzy name matching; Bank account change fraud detection</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-3-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-3-details" style="display:none;"></div>
+              </div>
+
+              <!-- Stage 5 -->
+              <div class="stage-item" id="stage-4">
+                <div class="stage-summary-row" onclick="toggleStageDetails(4)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">5</div>
+                    <div>
+                      <div class="stage-name">Stage 5 — Duplicate Invoice Detection</div>
+                      <div class="stage-sub" id="stage-4-sub">Exact key & fuzzy near-duplicate detection within rolling date window</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-4-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-4-details" style="display:none;"></div>
+              </div>
+
+              <!-- Stage 6 -->
+              <div class="stage-item" id="stage-5">
+                <div class="stage-summary-row" onclick="toggleStageDetails(5)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">6</div>
+                    <div>
+                      <div class="stage-name">Stage 6 — PO Match & Split Billing Tracking</div>
+                      <div class="stage-sub" id="stage-5-sub">2-way / 3-way matching, remaining balance & line-item inference</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-5-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-5-details" style="display:none;"></div>
+              </div>
+
+              <!-- Stage 7 -->
+              <div class="stage-item" id="stage-6">
+                <div class="stage-summary-row" onclick="toggleStageDetails(6)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">7</div>
+                    <div>
+                      <div class="stage-name">Stage 7 — Configurable Rules Engine (R1–R10)</div>
+                      <div class="stage-sub" id="stage-6-sub">Applies active tolerance, auto-approve ceiling, and confidence gates</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-6-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-6-details" style="display:none;"></div>
+              </div>
+
+              <!-- Stage 8 -->
+              <div class="stage-item" id="stage-7">
+                <div class="stage-summary-row" onclick="toggleStageDetails(7)">
+                  <div class="stage-left">
+                    <div class="stage-icon-circle">8</div>
+                    <div>
+                      <div class="stage-name">Stage 8 — Autonomous Decision & Explanation</div>
+                      <div class="stage-sub" id="stage-7-sub">Decision synthesis, plain-English justification & vendor email drafting</div>
+                    </div>
+                  </div>
+                  <div class="stage-duration" id="stage-7-dur">—</div>
+                </div>
+                <div class="stage-details" id="stage-7-details" style="display:none;"></div>
+              </div>
+
+            </div>
+
+            <!-- Decision Showcase Card (Appears on Completion) -->
+            <div id="decision-result-card" class="decision-card" style="display:none;">
+              <div class="decision-top">
+                <div>
+                  <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Final Automated Outcome</span>
+                  <div id="decision-badge" class="decision-badge-large">—</div>
+                </div>
+                <button class="btn-primary" style="background: rgba(255, 255, 255, 0.1); border: 1px solid var(--border-subtle);" onclick="openOverrideModal()">
+                  ✏️ Manual Override
+                </button>
+              </div>
+
+              <div id="decision-explanation" class="decision-explanation">
+                Processing explanation will appear here...
+              </div>
+
+              <div class="reason-tags" id="decision-reason-codes">
+                <!-- Reason pills -->
+              </div>
+
+              <!-- Optional Vendor Email Draft for REQUEST_INFO -->
+              <div id="vendor-email-container" class="email-draft-box" style="display:none;">
+                <div class="email-draft-title">✉️ Drafted Vendor Information Request Email</div>
+                <div id="vendor-email-content" class="email-content"></div>
+              </div>
+
+              <!-- Test Data Actions Bar: Pre-fill & Re-run -->
+              <div id="decision-actions-bar" class="decision-actions-bar" style="display:flex; gap:0.6rem; flex-wrap:wrap; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-subtle);">
+                <button id="btn-prefill-test-data" class="btn-primary" style="display:none; background: linear-gradient(135deg, #4f46e5, #06b6d4);" onclick="prefillFromCurrentRun()">
+                  ➕ Add this vendor / Create PO from this invoice
+                </button>
+                <button id="btn-rerun-run" class="btn-secondary" style="display:none;" onclick="rerunCurrentFile()">
+                  🔄 Re-run
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         TAB 2: DASHBOARD & RUNS HISTORY
+         =================================================================== -->
+    <section id="tab-dashboard" class="tab-pane">
+      
+      <!-- KPI Metrics Cards -->
+      <div class="metrics-grid">
+        <div class="metric-card card-cyan">
+          <div class="metric-label">Total Invoices</div>
+          <div class="metric-value" id="kpi-total">—</div>
+          <div class="metric-sub">Processed across all runs</div>
+        </div>
+        <div class="metric-card card-success">
+          <div class="metric-label">Auto-Approval Rate</div>
+          <div class="metric-value" id="kpi-rate">—%</div>
+          <div class="metric-sub">Zero manual touch rate</div>
+        </div>
+        <div class="metric-card card-warning">
+          <div class="metric-label">Hours Saved</div>
+          <div class="metric-value" id="kpi-saved">— hrs</div>
+          <div class="metric-sub">Based on 30 min/invoice benchmark</div>
+        </div>
+        <div class="metric-card card-danger">
+          <div class="metric-label">Fraud & Anomalies Caught</div>
+          <div class="metric-value" id="kpi-fraud">—</div>
+          <div class="metric-sub">Bank mismatches & duplicates blocked</div>
+        </div>
+      </div>
+
+      <!-- Historical Runs Table -->
+      <div class="data-table-container">
+        <div class="table-toolbar">
+          <input type="text" id="run-search-input" class="search-input" placeholder="Search by vendor, invoice #..." oninput="filterRunsTable()">
+          <div class="filter-group">
+            <button class="filter-btn active" onclick="setRunFilter('ALL', this)">All</button>
+            <button class="filter-btn" onclick="setRunFilter('AUTO_APPROVED', this)">Approved</button>
+            <button class="filter-btn" onclick="setRunFilter('HOLD_FOR_REVIEW', this)">Held</button>
+            <button class="filter-btn" onclick="setRunFilter('REJECTED', this)">Rejected</button>
+            <button class="filter-btn" onclick="setRunFilter('REQUEST_INFO', this)">Info Needed</button>
+          </div>
+          <button class="btn-secondary" style="padding: 0.4rem 0.9rem;" onclick="loadMetricsAndRuns()">🔄 Refresh</button>
+        </div>
+
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Filename</th>
+              <th>Vendor</th>
+              <th>Invoice #</th>
+              <th>Amount</th>
+              <th>PO #</th>
+              <th>Decision</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="runs-table-body">
+            <tr>
+              <td colspan="8" style="text-align:center; padding: 2rem;">Loading runs history...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </section>
+
+    <!-- ===================================================================
+         TAB 3: RULE THRESHOLDS
+         =================================================================== -->
+    <section id="tab-rules" class="tab-pane">
+      <div class="glass-card" style="margin-bottom: 1.5rem;">
+        <h2 style="font-family:'Outfit', sans-serif; font-size:1.25rem; font-weight:700; margin-bottom:0.5rem;">
+          Business Policy & Risk Rules Configuration
+        </h2>
+        <p style="font-size:0.875rem; color:var(--text-secondary);">
+          Fine-tune company-specific accounts payable policies without redeploying code. Updates apply immediately to incoming invoices.
+        </p>
+      </div>
+
+      <div class="rules-grid">
+        
+        <div class="rule-group-card">
+          <h3 class="card-title">Thresholds & Auto-Approval</h3>
+          
+          <div class="form-group">
+            <label class="form-label" for="rule-max-auto">Maximum Auto-Approve Amount (₹)</label>
+            <input type="number" id="rule-max-auto" class="form-control">
+            <div class="form-help">Invoices above this amount are flagged APPROVED_WITH_NOTE for secondary sign-off.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rule-po-pct">PO Variance Tolerance (%)</label>
+            <input type="number" step="0.01" id="rule-po-pct" class="form-control">
+            <div class="form-help">Default 0.02 (2%). Invoices exceeding PO by more than this variance are held.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rule-po-fixed">PO Variance Fixed Amount (₹)</label>
+            <input type="number" id="rule-po-fixed" class="form-control">
+            <div class="form-help">Fixed rupee leeway (e.g. ₹500 for freight/shipping adjustments).</div>
+          </div>
+        </div>
+
+        <div class="rule-group-card">
+          <h3 class="card-title">Confidence & Duplicate Windows</h3>
+
+          <div class="form-group">
+            <label class="form-label" for="rule-min-conf">Minimum Extraction Confidence (%)</label>
+            <input type="number" step="0.05" id="rule-min-conf" class="form-control">
+            <div class="form-help">Extractions below this threshold are placed on HOLD_FOR_REVIEW.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rule-dup-days">Duplicate Detection Window (Days)</label>
+            <input type="number" id="rule-dup-days" class="form-control">
+            <div class="form-help">Invoices with identical normalized key within this window trigger duplicate rejection.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="rule-mins-inv">Manual Handling Time Baseline (Minutes)</label>
+            <input type="number" id="rule-mins-inv" class="form-control">
+            <div class="form-help">Used to compute financial hours saved metrics (Default 30 min).</div>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <button class="btn-primary" onclick="saveRulesConfig()">💾 Save Changes</button>
+            <span id="rules-save-status" style="margin-left: 0.75rem; font-size: 0.825rem; color: var(--success);"></span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         TAB 4: MASTER DATA & SYSTEM ASSUMPTIONS
+         =================================================================== -->
+    <!-- ===================================================================
+         TAB 4: MASTER DATA & SYSTEM ASSUMPTIONS
+         =================================================================== -->
+    <section id="tab-master" class="tab-pane">
+
+      <!-- Test Data Notice Banner -->
+      <div class="test-data-banner">
+        <div class="test-data-header">
+          <div class="test-data-note">Add a vendor and PO to try your own invoice. This is only for testing purposes.</div>
+          <button class="btn-danger-outline" onclick="handleResetDemoData()" title="Clear all user-added test records, uploads, and restore seeds">
+            🔄 Reset demo data
+          </button>
+        </div>
+        <div class="test-data-hint">
+          <strong>What must match the invoice:</strong> vendor name, PO number, amount within tolerance, currency.
+        </div>
+      </div>
+
+      <!-- Simple Forms to Add Vendor & Add PO -->
+      <div class="rules-grid" style="margin-bottom: 1.5rem;">
+        
+        <!-- Add Vendor Form -->
+        <div class="rule-group-card" id="card-add-vendor">
+          <h3 class="card-title">➕ Add Test Vendor</h3>
+          <form id="form-add-vendor" onsubmit="submitAddVendor(event)">
+            <div class="form-group">
+              <label class="form-label" for="vendor-input-name">Vendor Name *</label>
+              <input type="text" id="vendor-input-name" class="form-control" placeholder="e.g. Acme Innovations Corp" required>
+            </div>
+            <div class="form-row" style="display:flex; gap:0.75rem;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="vendor-input-tax">Tax ID <span class="text-muted">(optional)</span></label>
+                <input type="text" id="vendor-input-tax" class="form-control" placeholder="e.g. US-987654321">
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="vendor-input-currency">Currency *</label>
+                <select id="vendor-input-currency" class="form-control">
+                  <option value="INR" selected>INR</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="CAD">CAD</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="vendor-input-bank">Bank Account <span class="text-muted">(optional)</span></label>
+              <input type="text" id="vendor-input-bank" class="form-control" placeholder="e.g. US89370400440532013000">
+            </div>
+            <div class="form-group checkbox-group" style="margin-top: 0.5rem; display:flex; align-items:center; gap:0.5rem;">
+              <input type="checkbox" id="vendor-input-approved" checked style="width:16px; height:16px;">
+              <label for="vendor-input-approved" class="form-label" style="margin-bottom:0; cursor:pointer;">Approved Vendor</label>
+            </div>
+            <div style="margin-top: 1rem; display:flex; justify-content:space-between; align-items:center;">
+              <button type="submit" class="btn-primary" style="padding: 0.45rem 1rem;">Add Vendor</button>
+              <span id="vendor-form-status" style="font-size:0.8rem;"></span>
+            </div>
+          </form>
+        </div>
+
+        <!-- Add PO Form -->
+        <div class="rule-group-card" id="card-add-po">
+          <h3 class="card-title">➕ Add Test Purchase Order</h3>
+          <form id="form-add-po" onsubmit="submitAddPO(event)">
+            <div class="form-row" style="display:flex; gap:0.75rem;">
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="po-input-number">PO Number *</label>
+                <input type="text" id="po-input-number" class="form-control" placeholder="e.g. PO-889900" required>
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label class="form-label" for="po-input-currency">Currency *</label>
+                <select id="po-input-currency" class="form-control">
+                  <option value="INR" selected>INR</option>
+                  <option value="USD">USD</option>
+                  <option value="EUR">EUR</option>
+                  <option value="GBP">GBP</option>
+                  <option value="CAD">CAD</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="po-input-vendor">Vendor *</label>
+              <select id="po-input-vendor" class="form-control" required>
+                <option value="">Select a vendor...</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="po-input-amount">Total Amount *</label>
+              <input type="number" step="0.01" min="0.01" id="po-input-amount" class="form-control" placeholder="e.g. 5000.00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="po-input-desc">Description <span class="text-muted">(optional)</span></label>
+              <input type="text" id="po-input-desc" class="form-control" placeholder="e.g. Custom invoice test services">
+            </div>
+            <div style="margin-top: 1rem; display:flex; justify-content:space-between; align-items:center;">
+              <button type="submit" class="btn-primary" style="padding: 0.45rem 1rem;">Add Purchase Order</button>
+              <span id="po-form-status" style="font-size:0.8rem;"></span>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Master Lists with User-Added Test Tags & Delete Actions -->
+      <div class="rules-grid">
+        
+        <div class="rule-group-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+            <h3 class="card-title" style="margin-bottom:0;">Vendor Master Records</h3>
+            <span id="vendor-count-badge" class="badge" style="background:rgba(255,255,255,0.08); font-size:0.75rem;">0 Records</span>
+          </div>
+          <div style="max-height: 400px; overflow-y:auto;">
+            <table class="data-table" style="font-size:0.775rem;">
+              <thead>
+                <tr><th>ID</th><th>Name</th><th>Tax ID</th><th>Bank Account</th><th>Status</th><th>Tag</th><th>Action</th></tr>
+              </thead>
+              <tbody id="master-vendors-body">
+                <tr><td colspan="7">Loading vendors...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="rule-group-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+            <h3 class="card-title" style="margin-bottom:0;">Purchase Order Records</h3>
+            <span id="po-count-badge" class="badge" style="background:rgba(255,255,255,0.08); font-size:0.75rem;">0 Records</span>
+          </div>
+          <div style="max-height: 400px; overflow-y:auto;">
+            <table class="data-table" style="font-size:0.775rem;">
+              <thead>
+                <tr><th>PO #</th><th>Vendor</th><th>Total</th><th>Currency</th><th>Tag</th><th>Action</th></tr>
+              </thead>
+              <tbody id="master-pos-body">
+                <tr><td colspan="6">Loading purchase orders...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Manual Decision Override Modal -->
+  <div id="override-modal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Manual Decision Override</h3>
+        <button class="modal-close" onclick="closeOverrideModal()">&times;</button>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="override-decision-select">New Decision</label>
+        <select id="override-decision-select" class="form-control">
+          <option value="AUTO_APPROVED">AUTO_APPROVED (Force Approval)</option>
+          <option value="APPROVED_WITH_NOTE">APPROVED_WITH_NOTE (Approve with Audit Note)</option>
+          <option value="HOLD_FOR_REVIEW">HOLD_FOR_REVIEW (Place on Hold)</option>
+          <option value="REJECTED">REJECTED (Deny Invoice)</option>
+          <option value="REQUEST_INFO">REQUEST_INFO (Request Clarification)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="override-reason-input">Manager Justification (Required for Audit Log)</label>
+        <textarea id="override-reason-input" class="form-control" rows="3" placeholder="Provide reason for override (e.g., 'Vendor bank update verified via phone call')."></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeOverrideModal()">Cancel</button>
+        <button class="btn-primary" onclick="submitDecisionOverride()">Confirm Override</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PDF Preview Modal -->
+  <div id="pdf-view-modal" class="modal-overlay">
+    <div class="modal-content pdf-modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title" id="pdf-modal-title">Invoice Preview</h3>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <a id="pdf-modal-external" href="#" target="_blank" class="btn-secondary" style="font-size:0.75rem; text-decoration:none; display:inline-flex; align-items:center; gap:0.25rem;">
+            Open in New Tab ↗
+          </a>
+          <button class="modal-close" onclick="closePdfModal()">&times;</button>
+        </div>
+      </div>
+      <div class="pdf-modal-body">
+        <iframe id="pdf-frame" src="about:blank" style="width:100%; height:550px; border:none; border-radius:var(--radius-sm); background:#1e293b;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

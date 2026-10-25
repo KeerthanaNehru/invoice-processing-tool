@@ -1,0 +1,11 @@
+po_number,vendor_id,description,total_amount,currency,issue_date,expiry_date
+PO-2024-001,V001,Office Supplies and Consumables,15000.00,USD,2024-01-01,2024-12-31
+PO-2024-002,V002,Software Development Services Q1,75000.00,USD,2024-01-15,2024-06-30
+PO-2024-003,V003,Freight and Logistics Services,8500.00,GBP,2024-02-01,2024-12-31
+PO-2024-004,V004,Annual IT Support and Maintenance,500000.00,INR,2024-01-01,2024-12-31
+PO-2024-005,V005,Management Consulting Project Alpha,120000.00,USD,2024-03-01,2024-09-30
+PO-2024-006,V006,Cloud Infrastructure Hosting Q2,25000.00,USD,2024-04-01,2024-06-30
+PO-2024-007,V001,Stationery and Printing Supplies,3200.00,USD,2024-05-01,2024-12-31
+PO-2024-008,V008,Data Analytics Platform License,250000.00,INR,2024-01-01,2024-12-31
+PO-2024-009,V002,Mobile App Development Phase 2,45000.00,USD,2024-06-01,2024-12-31
+PO-2024-010,V005,Strategy Workshop and Training,18000.00,USD,2024-07-01,2024-10-31
