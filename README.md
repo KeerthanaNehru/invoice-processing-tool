@@ -1,12 +1,3 @@
----
-title: Invoice Processing Tool
-emoji: 🧾
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 7860
----
-
 # Invoice Processing Tool — Autonomous AP & Invoice Verification Engine 📄
 
 An autonomous, 8-stage Accounts Payable (AP) invoice processing and verification engine designed to eliminate manual invoice handling while safeguarding financial integrity through fraud checks, PO matching, and configurable business rules.
