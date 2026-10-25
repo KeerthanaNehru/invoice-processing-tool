@@ -16,10 +16,6 @@ from __future__ import annotations
 
 import io
 import logging
-from pathlib import Path
-
-import pdfplumber
-
 from app.config import MAX_FILE_SIZE_BYTES, MAX_PAGES, SCANNED_CHAR_THRESHOLD
 from app.models import IngestMethod
 from app.pipeline.ocr import OCRUnavailableError, ocr_page_image
@@ -45,12 +41,20 @@ class NotAnInvoiceError(ValueError):
 
 def _extract_text_pdfplumber(pdf_bytes: bytes) -> tuple[str, int]:
     """Extract text from all pages using pdfplumber. Returns (text, page_count)."""
+    import pdfplumber
+
     with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
         page_count = len(pdf.pages)
+        if page_count > MAX_PAGES:
+            raise IngestError(f"PDF has {page_count} pages. Maximum is {MAX_PAGES}.")
         texts = []
         for page in pdf.pages:
             t = page.extract_text() or ""
             texts.append(t)
+            try:
+                page.flush_cache()
+            except Exception:
+                pass
         return "\n\n".join(texts), page_count
 
 
@@ -58,26 +62,42 @@ def _extract_text_ocr(pdf_bytes: bytes) -> tuple[str, int]:
     """
     Render each page to an image with PyMuPDF, then OCR with Tesseract.
     Returns (text, page_count).
+    Memory-optimised for 512 MB environments (Render Free Tier):
+      - 150 DPI resolution
+      - Grayscale colorspace (csGRAY / 'L' mode, 1 byte/pixel vs 3 bytes/pixel)
+      - Immediate image disposal per page
     Raises OCRUnavailableError if Tesseract is not installed.
     """
-    import fitz  # PyMuPDF
+    import pymupdf as fitz
     from PIL import Image
 
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page_count = doc.page_count
+    if page_count > MAX_PAGES:
+        doc.close()
+        raise IngestError(f"PDF has {page_count} pages. Maximum is {MAX_PAGES}.")
+
     texts = []
+    try:
+        for page_num in range(page_count):
+            page = doc[page_num]
+            # 150 DPI in grayscale (cuts memory by >80% vs 200 DPI RGB)
+            mat = fitz.Matrix(150 / 72, 150 / 72)
+            pix = page.get_pixmap(matrix=mat, colorspace=fitz.csGRAY)
+            img = Image.frombytes("L", (pix.width, pix.height), pix.samples)
+            del pix  # Free raw pixmap buffer immediately
 
-    for page_num in range(page_count):
-        page = doc[page_num]
-        # Render at 200 DPI (matrix scale = 200/72 ≈ 2.78)
-        mat = fitz.Matrix(200 / 72, 200 / 72)
-        pix = page.get_pixmap(matrix=mat, colorspace=fitz.csRGB)
-        img = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
-        page_text = ocr_page_image(img)
-        texts.append(page_text)
-        logger.debug("OCR page %d: %d chars", page_num + 1, len(page_text))
+            try:
+                page_text = ocr_page_image(img)
+                texts.append(page_text)
+            finally:
+                img.close()
+                del img
 
-    doc.close()
+            logger.debug("OCR page %d: %d chars", page_num + 1, len(texts[-1]))
+    finally:
+        doc.close()
+
     return "\n\n".join(texts), page_count
 
 

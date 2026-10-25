@@ -1,4 +1,4 @@
-# Dockerfile for Hugging Face Spaces (Docker SDK)
+# Dockerfile for Render Web Service (Docker Environment, 512 MB RAM Free Tier)
 FROM python:3.12-slim
 
 # Prevent Python from writing pyc files and buffering stdout/stderr
@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
-# Set up non-root user with UID 1000 (standard for Hugging Face Spaces)
+# Set up non-root user with UID 1000
 RUN useradd -m -u 1000 user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
@@ -39,8 +39,8 @@ RUN mkdir -p data data/uploads && \
 
 USER user
 
-# Expose default Hugging Face Spaces port
+# Default port documentation
 EXPOSE 7860
 
-# Launch FastAPI via uvicorn on 0.0.0.0:7860
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Launch FastAPI via uvicorn on 0.0.0.0, binding dynamically to $PORT (Render sets $PORT; defaults to 7860)
+CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-7860}"]

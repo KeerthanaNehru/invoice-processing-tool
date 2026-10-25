@@ -115,18 +115,26 @@ Open your browser to:
 
 ---
 
-## 🌐 Deploying to Hugging Face Spaces (Docker SDK)
+## 🌐 Deploying to Render (Free Web Service)
 
-1. Create a new Space on [Hugging Face](https://huggingface.co/spaces) with **Docker** SDK.
-2. Push this repository:
-```bash
-git remote add space https://huggingface.co/spaces/<your-username>/<space-name>
-git push space main
-```
-3. Set your Space secrets in **Settings > Variables and secrets**:
-   - `GROQ_API_KEY`: *(Optional for live LLM extraction; offline cache works automatically)*
+This project is containerized with Docker and memory-optimized for **Render's Free Tier (512 MB RAM, 0.1 CPU)**:
+- **Lightweight OCR**: 150 DPI grayscale rendering with immediate per-page memory disposal.
+- **Concurrency Control**: 1 pipeline run at a time to prevent memory spikes.
+- **Fast Startup & Health Check**: Instant `/health` endpoint and sub-15ms database seeding.
+- **Dynamic Port**: Binds directly to the `$PORT` environment variable injected by Render.
+
+### Steps to Deploy:
+1. Push your repository to **GitHub**.
+2. Go to the [Render Dashboard](https://dashboard.render.com/) and click **New +** > **Web Service**.
+3. Connect your GitHub repository.
+4. Configure the service:
+   - **Environment / Runtime**: `Docker`
+   - **Instance Type**: `Free` (512 MB RAM)
+   - **Health Check Path**: `/health`
+5. Under **Environment Variables**, add:
+   - `GROQ_API_KEY`: *(Optional; if omitted, the 10 built-in sample invoices execute seamlessly via the pre-computed offline cache)*
    - `RATE_LIMIT`: `60/hour`
-4. The Dockerfile automatically binds to port `7860` and runs as non-root user (UID 1000).
+6. Click **Create Web Service**. Render will automatically build the Docker container and deploy your live URL.
 
 ---
 

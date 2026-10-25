@@ -54,23 +54,42 @@ def _get_billed_to_date(
     current_invoice_number: str | None = None,
     filename: str | None = None,
 ) -> float:
-    """Sum invoice totals of all APPROVED runs that reference this PO, excluding this invoice itself."""
+    """
+    Sum invoice totals of all approved DISTINCT invoices referencing this PO,
+    excluding the invoice currently being processed.
+
+    If an invoice is re-run multiple times in testing or re-evaluated,
+    its amount is only counted ONCE towards the PO billed total.
+    """
     from app.database import get_db
     with get_db() as conn:
+        inv_clean = current_invoice_number.strip().lower() if current_invoice_number else ""
+        fn_clean = filename.strip().lower() if filename else ""
+
         query = """
-            SELECT COALESCE(SUM(invoice_total), 0) as billed
-            FROM runs
-            WHERE po_number = ?
-              AND id != ?
-              AND decision IN ('AUTO_APPROVED', 'APPROVED_WITH_NOTE')
+            SELECT COALESCE(SUM(inv_amt), 0.0) as billed
+            FROM (
+                SELECT 
+                    COALESCE(NULLIF(LOWER(TRIM(invoice_number)), ''), LOWER(TRIM(filename))) as inv_key,
+                    MAX(invoice_total) as inv_amt
+                FROM runs
+                WHERE po_number = ?
+                  AND id != ?
+                  AND decision IN ('AUTO_APPROVED', 'APPROVED_WITH_NOTE')
         """
         params: list = [po_number, current_run_id]
-        if current_invoice_number and current_invoice_number.strip():
-            query += " AND (invoice_number IS NULL OR LOWER(TRIM(invoice_number)) != LOWER(TRIM(?)))"
-            params.append(current_invoice_number.strip())
-        if filename and filename.strip():
-            query += " AND (filename IS NULL OR LOWER(TRIM(filename)) != LOWER(TRIM(?)))"
-            params.append(filename.strip())
+
+        if inv_clean:
+            query += " AND (invoice_number IS NULL OR LOWER(TRIM(invoice_number)) != ?)"
+            params.append(inv_clean)
+        if fn_clean:
+            query += " AND (filename IS NULL OR LOWER(TRIM(filename)) != ?)"
+            params.append(fn_clean)
+
+        query += """
+                GROUP BY COALESCE(NULLIF(LOWER(TRIM(invoice_number)), ''), LOWER(TRIM(filename)), id)
+            )
+        """
 
         row = conn.execute(query, params).fetchone()
         return float(row["billed"]) if row else 0.0
